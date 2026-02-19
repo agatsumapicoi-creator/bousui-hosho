@@ -8,6 +8,9 @@ export default function WaterproofWarrantyApp() {
   const [printingId, setPrintingId] = useState(null); 
   const [selectedIds, setSelectedIds] = useState(new Set());
 
+  // 元のページタイトル
+  const appTitle = "防水保証書作成アプリ";
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -38,13 +41,25 @@ export default function WaterproofWarrantyApp() {
     }
   };
 
-  // ★ 改善ポイント: 印刷が終わったら printingId を確実に戻す
   const handlePrint = (id) => {
+    // 保存時のファイル名設定
+    if (id !== null && id !== 'selected') {
+      const target = warrantyList.find(item => item.id === id);
+      if (target) {
+        const safeName = target.customerName.replace(/[\\/:*?"<>|]/g, "");
+        document.title = `${safeName}様、新築防水工事保証書`;
+      }
+    } else if (id === 'selected') {
+      document.title = `選択済み防水工事保証書一括`;
+    } else {
+      document.title = `防水工事保証書全件`;
+    }
+
     setPrintingId(id);
-    // レンダリングが完了するのを待ってから印刷
     setTimeout(() => {
       window.print();
       setPrintingId(null);
+      document.title = appTitle; // タイトルを元に戻す
     }, 200);
   };
 
@@ -71,18 +86,17 @@ export default function WaterproofWarrantyApp() {
     return `${fmt(start)} 〜 ${fmt(end)}`;
   };
 
-  // ★ 印刷対象かどうかを判定する関数
   const isTargetForPrint = (item) => {
-    if (printingId === null) return true; // 全件印刷
-    if (printingId === 'selected') return selectedIds.has(item.id); // 選択印刷
-    return printingId === item.id; // 個別印刷
+    if (printingId === null) return true;
+    if (printingId === 'selected') return selectedIds.has(item.id);
+    return printingId === item.id;
   };
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white text-slate-800 font-sans">
       <div className="max-w-[1200px] mx-auto">
         
-        {/* 操作パネル（印刷時は非表示） */}
+        {/* 操作パネル（印刷時は完全に消える） */}
         <div className="mb-8 grid lg:grid-cols-3 gap-6 print:hidden">
           <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-600"><FileUp size={20}/> データ読込</h2>
@@ -121,7 +135,7 @@ export default function WaterproofWarrantyApp() {
           
           <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 lg:col-span-2">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-orange-500"><Edit3 size={20}/> 発行リスト</h2>
-            <div className="overflow-y-auto max-h-[250px] space-y-2 pr-2">
+            <div className="overflow-y-auto max-h-[320px] space-y-2 pr-2">
               {warrantyList.length === 0 && <p className="text-slate-400 text-sm italic">CSVを読み込むとここに表示されます</p>}
               {warrantyList.map((item, idx) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-200 text-xs font-bold">
@@ -145,22 +159,22 @@ export default function WaterproofWarrantyApp() {
           </div>
         </div>
 
-        {/* プレビュー表示エリア */}
+        {/* プレビュー表示エリア（印刷対象のみ描画） */}
         <div className="space-y-12 print:space-y-0">
           {warrantyList.map((item) => {
-            // ★ ここが最重要：印刷対象外のデータは DOM（HTML）に描き出さない
             if (!isTargetForPrint(item)) return null;
 
             return (
               <div 
                 key={item.id} 
-                className="warranty-page bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[12mm] flex flex-col justify-between box-border mx-auto relative"
+                className="warranty-page bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[12mm] flex flex-col justify-between box-border mx-auto relative mb-8 print:mb-0"
               >
                 <div className="border-[4px] border-double border-slate-900 p-[6mm] flex flex-grow flex-col justify-between relative">
                   <div className="absolute top-1 left-1 right-1 bottom-1 border border-slate-300 pointer-events-none"></div>
                   <div>
+                    {/* ヘッダーセクション */}
                     <div className="flex justify-between items-start mb-6">
-                      <div className="w-40 text-[10px] font-bold">№：<input type="text" value={item.orderNo} onChange={(e) => updateItem(item.id, 'orderNo', e.target.value)} className="bg-transparent outline-none w-24 border-b border-slate-200" /></div>
+                      <div className="w-40 text-[10px] font-bold text-slate-700">№：<input type="text" value={item.orderNo} onChange={(e) => updateItem(item.id, 'orderNo', e.target.value)} className="bg-transparent outline-none w-24 border-b border-slate-300" /></div>
                       <div className="text-center flex-1">
                         <h1 className="text-3xl font-bold tracking-[0.4em] text-slate-900 mb-1 whitespace-nowrap">防水工事保証書</h1>
                         <div className="w-full h-1 bg-slate-900"></div>
@@ -170,6 +184,7 @@ export default function WaterproofWarrantyApp() {
                       </div>
                     </div>
 
+                    {/* 工事詳細テーブル風 */}
                     <div className="grid grid-cols-2 gap-x-10 gap-y-4 mb-6">
                       {[
                         { label: 'お客様名', field: 'customerName', value: item.customerName },
@@ -189,22 +204,24 @@ export default function WaterproofWarrantyApp() {
                       ))}
                     </div>
 
+                    {/* 保証期間ボックス */}
                     <div className="bg-slate-50 border-2 border-slate-200 rounded-lg py-4 px-4 mb-6 text-center">
                       <p className="text-[10px] font-bold text-slate-500 mb-1 tracking-[0.2em] uppercase">Waterproof Warranty Period</p>
                       <p className="text-xl font-bold text-slate-900">{calculateWarrantyPeriod(item.completionDate, item.warrantyYears)}</p>
                       <div className="text-[10px] font-bold text-slate-500 mt-1 flex items-center justify-center">
-                        (施工完了日より満 <input type="number" value={item.warrantyYears} onChange={(e)=>updateItem(item.id, 'warrantyYears', e.target.value)} className="w-8 text-center bg-transparent border-b border-slate-400 mx-1 outline-none" /> 年間保証)
+                        (施工完了日より満 <input type="number" value={item.warrantyYears} onChange={(e)=>updateItem(item.id, 'warrantyYears', e.target.value)} className="w-8 text-center bg-transparent border-b border-slate-400 mx-1 outline-none font-bold" /> 年間保証)
                       </div>
                     </div>
 
-                    <div className="space-y-4 px-2">
+                    {/* 約款セクション */}
+                    <div className="space-y-4 px-2 text-slate-800">
                       <section>
                         <h3 className="font-bold text-[11px] mb-1.5 border-l-4 border-slate-900 pl-2 bg-slate-100 py-0.5">〈保障の内容〉</h3>
-                        <p className="text-[11px] text-slate-700 ml-3">保証期間中、万一施工に起因する漏水が発生した場合、防水層の補修を致します。</p>
+                        <p className="text-[11px] ml-3 leading-relaxed">保証期間中、万一施工に起因する漏水が発生した場合、防水層の補修を致します。</p>
                       </section>
                       <section>
                         <h3 className="font-bold text-[11px] mb-1.5 border-l-4 border-slate-900 pl-2 bg-slate-100 py-0.5">〈免責事項〉</h3>
-                        <div className="grid grid-cols-1 gap-y-0.5 text-[10.5px] text-slate-700 ml-3 leading-snug">
+                        <div className="grid grid-cols-1 gap-y-0.5 text-[10.5px] ml-3 leading-snug">
                           <p>① 天災地変及び故意の損傷による事故。</p>
                           <p>② 下地躯体構造に起因する事故。</p>
                           <p>③ 防水工事施工後の、配管その他の工事等に起因する事故。</p>
@@ -217,11 +234,12 @@ export default function WaterproofWarrantyApp() {
                       </section>
                       <section>
                         <h3 className="font-bold text-[11px] mb-1.5 border-l-4 border-slate-900 pl-2 bg-slate-100 py-0.5">〈その他〉</h3>
-                        <p className="text-[11px] text-slate-700 ml-3">トップコートは5年ごとに点検し、再塗装(有償)を実施して下さい。</p>
+                        <p className="text-[11px] ml-3">トップコートは5年ごとに点検し、再塗装(有償)を実施して下さい。</p>
                       </section>
                     </div>
                   </div>
 
+                  {/* フッター：標準仕様と署名 */}
                   <div className="mt-auto">
                     <div className="border-2 border-slate-300 p-4 bg-white mb-4 rounded-md">
                       <h4 className="text-[10.5px] font-bold text-center mb-3 border-b-2 pb-1 text-slate-800 tracking-widest uppercase">ピコイFRP防水標準仕様</h4>
@@ -252,6 +270,9 @@ export default function WaterproofWarrantyApp() {
       </div>
 
       <style>{`
+        @media screen {
+          .warranty-page { margin-bottom: 50px; }
+        }
         @media print {
           @page { size: A4 portrait; margin: 0; }
           body { background: white !important; -webkit-print-color-adjust: exact; }
