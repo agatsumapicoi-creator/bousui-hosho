@@ -8,7 +8,6 @@ export default function WaterproofWarrantyApp() {
   const [printingId, setPrintingId] = useState(null); 
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  // 元のページタイトル
   const appTitle = "防水保証書作成アプリ";
 
   const handleFileUpload = (e) => {
@@ -29,10 +28,10 @@ export default function WaterproofWarrantyApp() {
               customerName: row[24] || row[7] || '', 
               constructionAddress: row[27] || row[10] || '', 
               constructionArea: 'ベランダ',
-              constructionType: 'FRP防水',
-              constructionMethod: 'FRP',
+              constructionType: 'FRP防水工事', // 初期値を設定
+              constructionMethod: '新築防水工事', 
               completionDate: rawDate.replace(/\//g, '-'), 
-              warrantyYears: '5' 
+              warrantyYears: '10'
             };
           }).filter(item => item.customerName !== "" || item.orderNo !== "");
           if (newWarranties.length > 0) setWarrantyList([...warrantyList, ...newWarranties]);
@@ -42,12 +41,11 @@ export default function WaterproofWarrantyApp() {
   };
 
   const handlePrint = (id) => {
-    // 保存時のファイル名設定
     if (id !== null && id !== 'selected') {
       const target = warrantyList.find(item => item.id === id);
       if (target) {
         const safeName = target.customerName.replace(/[\\/:*?"<>|]/g, "");
-        document.title = `${safeName}様、新築防水工事保証書`;
+        document.title = `${safeName}様、${target.constructionMethod}保証書`;
       }
     } else if (id === 'selected') {
       document.title = `選択済み防水工事保証書一括`;
@@ -59,7 +57,7 @@ export default function WaterproofWarrantyApp() {
     setTimeout(() => {
       window.print();
       setPrintingId(null);
-      document.title = appTitle; // タイトルを元に戻す
+      document.title = appTitle;
     }, 200);
   };
 
@@ -96,7 +94,7 @@ export default function WaterproofWarrantyApp() {
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white text-slate-800 font-sans">
       <div className="max-w-[1200px] mx-auto">
         
-        {/* 操作パネル（印刷時は完全に消える） */}
+        {/* 操作パネル */}
         <div className="mb-8 grid lg:grid-cols-3 gap-6 print:hidden">
           <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-600"><FileUp size={20}/> データ読込</h2>
@@ -116,18 +114,10 @@ export default function WaterproofWarrantyApp() {
                   }
                 }} className="w-full" />
               </div>
-              <button 
-                onClick={() => handlePrint('selected')}
-                disabled={selectedIds.size === 0}
-                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
-              >
+              <button onClick={() => handlePrint('selected')} disabled={selectedIds.size === 0} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
                 <CheckSquare size={18}/> 選択した {selectedIds.size} 件を保存
               </button>
-              <button 
-                onClick={() => handlePrint(null)}
-                disabled={warrantyList.length === 0}
-                className="w-full bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md hover:bg-black flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
-              >
+              <button onClick={() => handlePrint(null)} disabled={warrantyList.length === 0} className="w-full bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md hover:bg-black flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
                 <Layers size={18}/> まとめて全ページ印刷
               </button>
             </div>
@@ -136,14 +126,14 @@ export default function WaterproofWarrantyApp() {
           <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 lg:col-span-2">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-orange-500"><Edit3 size={20}/> 発行リスト</h2>
             <div className="overflow-y-auto max-h-[320px] space-y-2 pr-2">
-              {warrantyList.length === 0 && <p className="text-slate-400 text-sm italic">CSVを読み込むとここに表示されます</p>}
+              {warrantyList.length === 0 && <p className="text-slate-400 text-sm italic">CSVを読み込むと表示されます</p>}
               {warrantyList.map((item, idx) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-200 text-xs font-bold">
                   <div className="flex items-center gap-3 truncate">
                     <button onClick={() => toggleSelect(item.id)}>
                       {selectedIds.has(item.id) ? <CheckSquare size={20} className="text-blue-600"/> : <Square size={20} className="text-slate-300"/>}
                     </button>
-                    <span className="truncate">#{idx+1} [№:{item.orderNo}] {item.customerName} 様</span>
+                    <span className="truncate">#{idx+1} [№:{item.orderNo}] {item.customerName} 様 ({item.constructionMethod})</span>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={() => handlePrint(item.id)} className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded flex items-center gap-2">
@@ -159,20 +149,16 @@ export default function WaterproofWarrantyApp() {
           </div>
         </div>
 
-        {/* プレビュー表示エリア（印刷対象のみ描画） */}
+        {/* プレビュー表示エリア */}
         <div className="space-y-12 print:space-y-0">
           {warrantyList.map((item) => {
             if (!isTargetForPrint(item)) return null;
 
             return (
-              <div 
-                key={item.id} 
-                className="warranty-page bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[12mm] flex flex-col justify-between box-border mx-auto relative mb-8 print:mb-0"
-              >
+              <div key={item.id} className="warranty-page bg-white shadow-2xl w-[210mm] min-h-[297mm] p-[12mm] flex flex-col justify-between box-border mx-auto relative mb-8 print:mb-0">
                 <div className="border-[4px] border-double border-slate-900 p-[6mm] flex flex-grow flex-col justify-between relative">
                   <div className="absolute top-1 left-1 right-1 bottom-1 border border-slate-300 pointer-events-none"></div>
                   <div>
-                    {/* ヘッダーセクション */}
                     <div className="flex justify-between items-start mb-6">
                       <div className="w-40 text-[10px] font-bold text-slate-700">№：<input type="text" value={item.orderNo} onChange={(e) => updateItem(item.id, 'orderNo', e.target.value)} className="bg-transparent outline-none w-24 border-b border-slate-300" /></div>
                       <div className="text-center flex-1">
@@ -184,36 +170,47 @@ export default function WaterproofWarrantyApp() {
                       </div>
                     </div>
 
-                    {/* 工事詳細テーブル風 */}
                     <div className="grid grid-cols-2 gap-x-10 gap-y-4 mb-6">
-                      {[
-                        { label: 'お客様名', field: 'customerName', value: item.customerName },
-                        { label: '工事場所', field: 'constructionAddress', value: item.constructionAddress },
-                        { label: '施工箇所', field: 'constructionArea', value: item.constructionArea },
-                        { label: '施工種別', field: 'constructionType', value: item.constructionType },
-                        { label: '工法名', field: 'constructionMethod', value: item.constructionMethod },
-                        { label: '施工完了日', field: 'completionDate', value: item.completionDate, type: 'date' }
-                      ].map((cell) => (
-                        <div key={cell.field} className="border-b border-slate-400 pb-0.5">
-                          <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">{cell.label}</p>
-                          <div className="flex items-center">
-                            <input type={cell.type || "text"} value={cell.value} onChange={(e) => updateItem(item.id, cell.field, e.target.value)} className={`w-full text-[12px] bg-transparent outline-none font-bold ${cell.field === 'customerName' ? 'text-[16px]' : ''}`} />
-                            {cell.field === 'customerName' && cell.value && <span className="text-xs font-bold ml-1">様</span>}
-                          </div>
+                      <div className="border-b border-slate-400 pb-0.5">
+                        <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">お客様名</p>
+                        <div className="flex items-center">
+                          <input type="text" value={item.customerName} onChange={(e) => updateItem(item.id, 'customerName', e.target.value)} className="w-full text-[16px] bg-transparent outline-none font-bold" />
+                          {item.customerName && <span className="text-xs font-bold ml-1">様</span>}
                         </div>
-                      ))}
+                      </div>
+                      <div className="border-b border-slate-400 pb-0.5">
+                        <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">工事場所</p>
+                        <input type="text" value={item.constructionAddress} onChange={(e) => updateItem(item.id, 'constructionAddress', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold" />
+                      </div>
+                      <div className="border-b border-slate-400 pb-0.5">
+                        <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">施工箇所</p>
+                        <input type="text" value={item.constructionArea} onChange={(e) => updateItem(item.id, 'constructionArea', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold" />
+                      </div>
+                      <div className="border-b border-slate-400 pb-0.5">
+                        <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">施工種別</p>
+                        <input type="text" value={item.constructionType} onChange={(e) => updateItem(item.id, 'constructionType', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold" />
+                      </div>
+                      <div className="border-b border-slate-400 pb-0.5">
+                        <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">工事項目</p>
+                        <select value={item.constructionMethod} onChange={(e) => updateItem(item.id, 'constructionMethod', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold appearance-none cursor-pointer">
+                          <option value="新築防水工事">新築防水工事</option>
+                          <option value="防水改修工事">防水改修工事</option>
+                        </select>
+                      </div>
+                      <div className="border-b border-slate-400 pb-0.5">
+                        <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">施工完了日</p>
+                        <input type="date" value={item.completionDate} onChange={(e) => updateItem(item.id, 'completionDate', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold" />
+                      </div>
                     </div>
 
-                    {/* 保証期間ボックス */}
                     <div className="bg-slate-50 border-2 border-slate-200 rounded-lg py-4 px-4 mb-6 text-center">
                       <p className="text-[10px] font-bold text-slate-500 mb-1 tracking-[0.2em] uppercase">Waterproof Warranty Period</p>
                       <p className="text-xl font-bold text-slate-900">{calculateWarrantyPeriod(item.completionDate, item.warrantyYears)}</p>
                       <div className="text-[10px] font-bold text-slate-500 mt-1 flex items-center justify-center">
-                        (施工完了日より満 <input type="number" value={item.warrantyYears} onChange={(e)=>updateItem(item.id, 'warrantyYears', e.target.value)} className="w-8 text-center bg-transparent border-b border-slate-400 mx-1 outline-none font-bold" /> 年間保証)
+                        (施工完了日より満 <input type="number" value={item.warrantyYears} onChange={(e)=>updateItem(item.id, 'warrantyYears', e.target.value)} className="w-10 text-center bg-transparent border-b border-slate-400 mx-1 outline-none font-bold" /> 年間保証)
                       </div>
                     </div>
 
-                    {/* 約款セクション */}
                     <div className="space-y-4 px-2 text-slate-800">
                       <section>
                         <h3 className="font-bold text-[11px] mb-1.5 border-l-4 border-slate-900 pl-2 bg-slate-100 py-0.5">〈保障の内容〉</h3>
@@ -234,12 +231,11 @@ export default function WaterproofWarrantyApp() {
                       </section>
                       <section>
                         <h3 className="font-bold text-[11px] mb-1.5 border-l-4 border-slate-900 pl-2 bg-slate-100 py-0.5">〈その他〉</h3>
-                        <p className="text-[11px] ml-3">トップコートは5年ごとに点検し、再塗装(有償)を実施して下さい。</p>
+                        <p className="text-[11px] ml-3">トップコートは、5年ごとを目安に定期点検を推奨いたします。</p>
                       </section>
                     </div>
                   </div>
 
-                  {/* フッター：標準仕様と署名 */}
                   <div className="mt-auto">
                     <div className="border-2 border-slate-300 p-4 bg-white mb-4 rounded-md">
                       <h4 className="text-[10.5px] font-bold text-center mb-3 border-b-2 pb-1 text-slate-800 tracking-widest uppercase">ピコイFRP防水標準仕様</h4>
@@ -248,11 +244,11 @@ export default function WaterproofWarrantyApp() {
                         <p><span className="font-bold text-slate-800">(2)</span> 下地の合板は耐水合板(T1)厚み12m/mの2枚張りとする。(防火地域内は防火板厚み12m/mを張る)</p>
                         <p><span className="font-bold text-slate-800">(3)</span> 根太間隔は300m/m以下とする。</p>
                         <p><span className="font-bold text-slate-800">(4)</span> 下張りと上張りの合板及び上張り防火板の目地は重ならないように張る。</p>
-                        <p><span className="font-bold text-slate-800">(5)</span> 防火層の立上り高さは、開口部の下端で120m/m以上、それ以下の部分は250m/m以上とする。</p>
-                        <p><span className="font-bold text-slate-800">(6)</span> FRP防水はガラスマット積層を、木下地2PLYとし、他は工法仕様に準ずるものとする。</p>
-                        <p><span className="font-bold text-slate-800">(7)</span> 排水ドレンはDP-1Bを標準仕様とする。</p>
+                        <p><span className="font-bold text-slate-800">(5)</span> 防水層の立上り高さは、開口部の下端で120m/m以上、その他の立上りは250m/m以上とする。</p>
+                        <p><span className="font-bold text-slate-800">(6)</span> FRP防水はガラスマット積層を、下地に2枚貼りとし、他は工法仕様に準ずるものとする。</p>
+                        <p><span className="font-bold text-slate-800">(7)</span> 排水ドレンはFRP製を基準とする。</p>
                         <p><span className="font-bold text-slate-800">(8)</span> 根太を用いず直接、床下地板を張る場合、木造住宅工事仕様書(2005年改訂)5.8.7-6項目に準じる。</p>
-                        <p><span className="font-bold text-slate-800">(9)</span> 特殊部の納まりが適切なものとする。</p>
+                        <p><span className="font-bold text-slate-800">(9)</span> 特殊部分の納まりは標準仕様に該当しないためその部分は保証対象外とする。</p>
                       </div>
                     </div>
                     <div className="flex justify-between items-end border-t-4 border-slate-900 pt-4 px-2">
@@ -277,13 +273,12 @@ export default function WaterproofWarrantyApp() {
           @page { size: A4 portrait; margin: 0; }
           body { background: white !important; -webkit-print-color-adjust: exact; }
           .print-hidden, .print\\:hidden { display: none !important; }
-          
           .warranty-page {
             box-shadow: none !important; margin: 0 !important; padding: 12mm !important;
             page-break-after: always; width: 210mm !important; height: 297mm !important;
             display: flex !important;
           }
-          input { border: none !important; outline: none !important; background: transparent !important; }
+          input, select { border: none !important; outline: none !important; background: transparent !important; appearance: none !important; }
           .bg-slate-50 { background-color: #f8fafc !important; }
           .bg-slate-100 { background-color: #f1f5f9 !important; }
         }
