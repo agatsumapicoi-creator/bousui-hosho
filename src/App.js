@@ -28,7 +28,7 @@ export default function WaterproofWarrantyApp() {
               customerName: row[24] || row[7] || '', 
               constructionAddress: row[27] || row[10] || '', 
               constructionArea: 'ベランダ',
-              constructionType: 'FRP防水工事', // 初期値を設定
+              constructionType: 'FRP防水工事', 
               constructionMethod: '新築防水工事', 
               completionDate: rawDate.replace(/\//g, '-'), 
               warrantyYears: '10'
@@ -227,6 +227,7 @@ export default function WaterproofWarrantyApp() {
                           <p>⑥ 本来の用途以外の仕様に起因する事故。</p>
                           <p>⑦ 施工者以外の施工作業に起因する事故。</p>
                           <p>⑧ 記載の防水標準仕様と著しく異なる仕様の場合。</p>
+                          <p>⑨ 施工者の状況確認無しに修繕、補修がなされていた場合。</p>
                         </div>
                       </section>
                       <section>
@@ -252,7 +253,7 @@ export default function WaterproofWarrantyApp() {
                       </div>
                     </div>
                     <div className="flex justify-between items-end border-t-4 border-slate-900 pt-4 px-2">
-                      <p className="text-[15px] font-bold tracking-[0.3em] text-slate-900">上記の通り、保証いたします。</p>
+                      <p className="text-[15px] font-bold tracking-[0.3em] text-slate-900">上記の通り, 保証いたします。</p>
                       <div className="text-right">
                         <p className="text-[10px] text-slate-800 font-bold italic">発行日：{new Date().toLocaleDateString('ja-JP', {year: 'numeric', month: 'long', day: 'numeric'})}</p>
                       </div>
