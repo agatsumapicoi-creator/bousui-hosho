@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileUp, Trash2, Edit3, Printer, Layers, CheckSquare, Square } from 'lucide-react';
+import { FileUp, Trash2, Edit3, Printer, Layers, CheckSquare, Square, AlertCircle } from 'lucide-react';
 import Papa from 'papaparse';
 
 export default function WaterproofWarrantyApp() {
@@ -10,6 +10,7 @@ export default function WaterproofWarrantyApp() {
 
   const appTitle = "防水保証書作成アプリ";
 
+  // CSV読み込み
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -41,6 +42,9 @@ export default function WaterproofWarrantyApp() {
   };
 
   const handlePrint = (id) => {
+    // 角印がない場合は実行しない（念のためのガード）
+    if (!companyStamp) return;
+
     if (id !== null && id !== 'selected') {
       const target = warrantyList.find(item => item.id === id);
       if (target) {
@@ -103,8 +107,11 @@ export default function WaterproofWarrantyApp() {
                 <span className="text-sm font-bold text-slate-600">CSVを選択 (Shift-JIS)</span>
                 <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
               </label>
-              <div className="pt-2 text-xs">
-                <label className="block font-bold text-slate-500 mb-1 text-[10px]">社判（角印）の登録</label>
+              
+              <div className="pt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <label className="block font-bold text-slate-600 mb-2 text-xs flex items-center gap-1">
+                  {companyStamp ? <span className="text-green-600">● 角印登録済み</span> : <span className="text-red-500">● 角印未登録</span>}
+                </label>
                 <input type="file" accept="image/*" onChange={(e) => {
                   const file = e.target.files[0];
                   if (file) {
@@ -112,12 +119,29 @@ export default function WaterproofWarrantyApp() {
                     reader.onload = (ev) => setCompanyStamp(ev.target.result);
                     reader.readAsDataURL(file);
                   }
-                }} className="w-full" />
+                }} className="text-[10px] w-full" />
               </div>
-              <button onClick={() => handlePrint('selected')} disabled={selectedIds.size === 0} className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
-                <CheckSquare size={18}/> 選択した {selectedIds.size} 件を保存
+
+              {/* 警告表示 */}
+              {!companyStamp && (
+                <p className="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-pulse">
+                  <AlertCircle size={12}/> 印刷には角印の登録が必要です
+                </p>
+              )}
+
+              <button 
+                onClick={() => handlePrint('selected')} 
+                disabled={selectedIds.size === 0 || !companyStamp} 
+                className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <CheckSquare size={18}/> 選択した {selectedIds.size} 件を印刷
               </button>
-              <button onClick={() => handlePrint(null)} disabled={warrantyList.length === 0} className="w-full bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md hover:bg-black flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
+
+              <button 
+                onClick={() => handlePrint(null)} 
+                disabled={warrantyList.length === 0 || !companyStamp} 
+                className="w-full bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md hover:bg-black flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
                 <Layers size={18}/> まとめて全ページ印刷
               </button>
             </div>
@@ -136,8 +160,12 @@ export default function WaterproofWarrantyApp() {
                     <span className="truncate">#{idx+1} [№:{item.orderNo}] {item.customerName} 様 ({item.constructionMethod})</span>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handlePrint(item.id)} className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded flex items-center gap-2">
-                      <Printer size={14}/> 個別PDF
+                    <button 
+                      onClick={() => handlePrint(item.id)} 
+                      disabled={!companyStamp}
+                      className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded flex items-center gap-2 disabled:opacity-50 disabled:grayscale"
+                    >
+                      <Printer size={14}/> 個別印刷
                     </button>
                     <button onClick={() => setWarrantyList(warrantyList.filter(i => i.id !== item.id))} className="text-red-400 p-1 hover:text-red-600">
                       <Trash2 size={16}/>
