@@ -5,7 +5,7 @@ import Papa from 'papaparse';
 export default function WaterproofWarrantyApp() {
   const [warrantyList, setWarrantyList] = useState([]);
   const [companyStamp, setCompanyStamp] = useState(null);
-  const [printingId, setPrintingId] = useState(null); 
+  const [printingId, setPrintingId] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const appTitle = "防水保証書作成アプリ";
@@ -15,8 +15,8 @@ export default function WaterproofWarrantyApp() {
     const file = e.target.files[0];
     if (file) {
       Papa.parse(file, {
-        encoding: "SJIS", 
-        header: false, 
+        encoding: "SJIS",
+        header: false,
         skipEmptyLines: true,
         complete: (results) => {
           const rows = results.data;
@@ -25,13 +25,13 @@ export default function WaterproofWarrantyApp() {
             const rawDate = row[3] || '';
             return {
               id: `id-${Date.now()}-${index}`,
-              orderNo: row[4] || '', 
-              customerName: row[24] || row[7] || '', 
-              constructionAddress: row[27] || row[10] || '', 
+              orderNo: row[4] || '',
+              customerName: row[24] || row[7] || '',
+              constructionAddress: row[27] || row[10] || '',
               constructionArea: 'ベランダ',
-              constructionType: 'FRP防水工事', 
-              constructionMethod: '新築防水工事', 
-              completionDate: rawDate.replace(/\//g, '-'), 
+              constructionType: 'FRP防水工事',
+              constructionMethod: '新築防水工事',
+              completionDate: rawDate.replace(/\//g, '-'),
               warrantyYears: '10'
             };
           }).filter(item => item.customerName !== "" || item.orderNo !== "");
@@ -42,7 +42,6 @@ export default function WaterproofWarrantyApp() {
   };
 
   const handlePrint = (id) => {
-    // 角印がない場合は実行しない（念のためのガード）
     if (!companyStamp) return;
 
     if (id !== null && id !== 'selected') {
@@ -83,7 +82,7 @@ export default function WaterproofWarrantyApp() {
     const end = new Date(start);
     const y = parseInt(years) || 0;
     end.setFullYear(end.getFullYear() + y);
-    end.setDate(end.getDate() - 1); 
+    end.setDate(end.getDate() - 1);
     const fmt = (d) => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
     return `${fmt(start)} 〜 ${fmt(end)}`;
   };
@@ -97,7 +96,7 @@ export default function WaterproofWarrantyApp() {
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 print:p-0 print:bg-white text-slate-800 font-sans">
       <div className="max-w-[1200px] mx-auto">
-        
+
         {/* 操作パネル */}
         <div className="mb-8 grid lg:grid-cols-3 gap-6 print:hidden">
           <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
@@ -107,7 +106,7 @@ export default function WaterproofWarrantyApp() {
                 <span className="text-sm font-bold text-slate-600">CSVを選択 (Shift-JIS)</span>
                 <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
               </label>
-              
+
               <div className="pt-2 p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <label className="block font-bold text-slate-600 mb-2 text-xs flex items-center gap-1">
                   {companyStamp ? <span className="text-green-600">● 角印登録済み</span> : <span className="text-red-500">● 角印未登録</span>}
@@ -122,31 +121,30 @@ export default function WaterproofWarrantyApp() {
                 }} className="text-[10px] w-full" />
               </div>
 
-              {/* 警告表示 */}
               {!companyStamp && (
                 <p className="text-red-500 text-[10px] font-bold flex items-center gap-1 animate-pulse">
                   <AlertCircle size={12}/> 印刷には角印の登録が必要です
                 </p>
               )}
 
-              <button 
-                onClick={() => handlePrint('selected')} 
-                disabled={selectedIds.size === 0 || !companyStamp} 
+              <button
+                onClick={() => handlePrint('selected')}
+                disabled={selectedIds.size === 0 || !companyStamp}
                 className="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 <CheckSquare size={18}/> 選択した {selectedIds.size} 件を印刷
               </button>
 
-              <button 
-                onClick={() => handlePrint(null)} 
-                disabled={warrantyList.length === 0 || !companyStamp} 
+              <button
+                onClick={() => handlePrint(null)}
+                disabled={warrantyList.length === 0 || !companyStamp}
                 className="w-full bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md hover:bg-black flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
                 <Layers size={18}/> まとめて全ページ印刷
               </button>
             </div>
           </div>
-          
+
           <div className="bg-white p-6 rounded-xl shadow-lg border border-slate-200 lg:col-span-2">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-orange-500"><Edit3 size={20}/> 発行リスト</h2>
             <div className="overflow-y-auto max-h-[320px] space-y-2 pr-2">
@@ -160,8 +158,8 @@ export default function WaterproofWarrantyApp() {
                     <span className="truncate">#{idx+1} [№:{item.orderNo}] {item.customerName} 様 ({item.constructionMethod})</span>
                   </div>
                   <div className="flex gap-2">
-                    <button 
-                      onClick={() => handlePrint(item.id)} 
+                    <button
+                      onClick={() => handlePrint(item.id)}
                       disabled={!companyStamp}
                       className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-1.5 rounded flex items-center gap-2 disabled:opacity-50 disabled:grayscale"
                     >
@@ -206,10 +204,18 @@ export default function WaterproofWarrantyApp() {
                           {item.customerName && <span className="text-xs font-bold ml-1">様</span>}
                         </div>
                       </div>
-                      <div className="border-b border-slate-400 pb-0.5">
+
+                      {/* 工事場所：長い住所に対応するため textarea に変更 */}
+                      <div className="border-b border-slate-400 pb-0.5 min-h-[46px] flex flex-col justify-end">
                         <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">工事場所</p>
-                        <input type="text" value={item.constructionAddress} onChange={(e) => updateItem(item.id, 'constructionAddress', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold" />
+                        <textarea 
+                          rows="2"
+                          value={item.constructionAddress} 
+                          onChange={(e) => updateItem(item.id, 'constructionAddress', e.target.value)} 
+                          className="w-full text-[12px] bg-transparent outline-none font-bold resize-none leading-tight overflow-hidden" 
+                        />
                       </div>
+
                       <div className="border-b border-slate-400 pb-0.5">
                         <p className="text-[9px] text-slate-400 font-bold mb-0.5 tracking-wider uppercase">施工箇所</p>
                         <input type="text" value={item.constructionArea} onChange={(e) => updateItem(item.id, 'constructionArea', e.target.value)} className="w-full text-[12px] bg-transparent outline-none font-bold" />
@@ -307,7 +313,13 @@ export default function WaterproofWarrantyApp() {
             page-break-after: always; width: 210mm !important; height: 297mm !important;
             display: flex !important;
           }
-          input, select { border: none !important; outline: none !important; background: transparent !important; appearance: none !important; }
+          input, select, textarea { 
+            border: none !important; 
+            outline: none !important; 
+            background: transparent !important; 
+            appearance: none !important; 
+            overflow: hidden !important;
+          }
           .bg-slate-50 { background-color: #f8fafc !important; }
           .bg-slate-100 { background-color: #f1f5f9 !important; }
         }
