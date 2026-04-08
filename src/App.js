@@ -31,7 +31,15 @@ export default function WaterproofWarrantyApp() {
               constructionArea: 'ベランダ',
               constructionType: 'FRP防水工事',
               constructionMethod: '新築防水工事',
-              completionDate: rawDate.replace(/\//g, '-'),
+              completionDate: (() => {
+                if (!rawDate) return '';
+                const parts = rawDate.split('/');
+                if (parts.length === 3) {
+                  const [y, m, d] = parts;
+                  return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+                }
+                return rawDate.replace(/\//g, '-');
+              })(),
               warrantyYears: '10'
             };
           }).filter(item => item.customerName !== "" || item.orderNo !== "");
