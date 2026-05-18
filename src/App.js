@@ -127,6 +127,15 @@ export default function WaterproofWarrantyApp() {
     return `${fmt(start)} 〜 ${fmt(end)}`;
   };
 
+  // 施工種別から工法キーワードを抽出（例：「ウレタン防水工事」→「ウレタン」）
+  const getMethodKeyword = (constructionType) => {
+    if (!constructionType) return 'FRP';
+    if (constructionType.includes('ウレタン')) return 'ウレタン';
+    if (constructionType.includes('シート')) return 'シート';
+    if (constructionType.includes('アスファルト')) return 'アスファルト';
+    return 'FRP'; // デフォルト
+  };
+
   const isTargetForPrint = (item) => {
     if (printingId === null) return true;
     if (printingId === 'selected') return selectedIds.has(item.id);
@@ -310,15 +319,15 @@ export default function WaterproofWarrantyApp() {
                   <div className="mt-auto">
                     {/* 標準仕様 */}
                     <div className="border-2 border-slate-300 px-4 py-2 bg-white mb-2 rounded-md">
-                      <h4 className="text-[10.5px] font-bold text-center mb-1 border-b-2 pb-1 text-slate-800 tracking-widest uppercase">ピコイFRP防水標準仕様</h4>
+                      <h4 className="text-[10.5px] font-bold text-center mb-1 border-b-2 pb-1 text-slate-800 tracking-widest uppercase">ピコイ{getMethodKeyword(item.constructionType)}防水標準仕様</h4>
                       <div className="grid grid-cols-1 gap-y-0.5 text-[9.5px] text-slate-600 leading-snug px-1">
                         <p><span className="font-bold text-slate-800">(1)</span> 床の勾配は1/50以上とする。</p>
                         <p><span className="font-bold text-slate-800">(2)</span> 下地の合板は耐水合板(T1)厚み12m/mの2枚張りとする。(防火地域内は防火板厚み12m/mを張る)</p>
                         <p><span className="font-bold text-slate-800">(3)</span> 根太間隔は300m/m以下とする。</p>
                         <p><span className="font-bold text-slate-800">(4)</span> 下張りと上張りの合板及び上張り防火板の目地は重ならないように張る。</p>
                         <p><span className="font-bold text-slate-800">(5)</span> 防水層の立上り高さは、開口部の下端で120m/m以上、その他の立上りは250m/m以上とする。</p>
-                        <p><span className="font-bold text-slate-800">(6)</span> FRP防水はガラスマット積層を、下地に2枚貼りとし、他は工法仕様に準ずるものとする。</p>
-                        <p><span className="font-bold text-slate-800">(7)</span> 排水ドレンはFRP製を基準とする。</p>
+                        <p><span className="font-bold text-slate-800">(6)</span> {getMethodKeyword(item.constructionType) === 'FRP' ? 'FRP防水はガラスマット積層を、下地に2枚貼りとし、他は工法仕様に準ずるものとする。' : '防水工事は所定の工法仕様に準じ、適切な材料・工程にて施工するものとする。'}</p>
+                        <p><span className="font-bold text-slate-800">(7)</span> {getMethodKeyword(item.constructionType) === 'FRP' ? '排水ドレンはFRP製を基準とする。' : '排水ドレンは防水工法に適合したものを基準とする。'}</p>
                         <p><span className="font-bold text-slate-800">(8)</span> 根太を用いず直接、床下地板を張る場合、木造住宅工事仕様書(2005年改訂)5.8.7-6項目に準じる。</p>
                         <p><span className="font-bold text-slate-800">(9)</span> 特殊部分の納まりは標準仕様に該当しないためその部分は保証対象外とする。</p>
                       </div>
